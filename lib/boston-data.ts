@@ -10,6 +10,7 @@ export interface BostonLiveData {
   mbta: string;
   weather: string;
   events: string;
+  buzz: string;
 }
 
 export async function fetchMBTAAlerts(): Promise<string> {
@@ -52,32 +53,71 @@ export async function fetchBostonWeather(): Promise<string> {
 }
 
 export async function fetchCityEvents(): Promise<string> {
+  const apiKey = process.env.TICKETMASTER_API_KEY;
+  if (!apiKey) {
+    // Signal to the agent to search for events itself
+    return "No events API key configured — use web_search to find Boston events tonight.";
+  }
   try {
-    const clientId = process.env.SEATGEEK_CLIENT_ID;
-    if (!clientId) return "City events unavailable (SEATGEEK_CLIENT_ID not set).";
     const today = new Date().toISOString().split("T")[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
     const res = await fetch(
-      `https://api.seatgeek.com/2/events?venue.city=boston&datetime_local.gte=${today}T00:00:00&datetime_local.lte=${today}T23:59:59&per_page=8&sort=score.desc&client_id=${clientId}`,
+      `https://app.ticketmaster.com/discovery/v2/events.json?city=Boston&stateCode=MA&countryCode=US&startDateTime=${today}T00:00:00Z&endDateTime=${tomorrow}T04:00:00Z&size=8&sort=relevance,desc&apikey=${apiKey}`,
       { signal: AbortSignal.timeout(8000) },
     );
-    if (!res.ok) return `SeatGeek API error: ${res.status}`;
+    if (!res.ok) return `Ticketmaster API error: ${res.status} — use web_search to find Boston events tonight.`;
     const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const events = (data.events ?? []).map((e: any) =>
-      `${e.title} @ ${e.venue?.name ?? "TBD"} at ${e.datetime_local?.slice(11, 16) ?? "TBD"}`,
-    );
-    if (events.length === 0) return "No events found in Boston today.";
+    const events = (data._embedded?.events ?? []).map((e: any) => {
+      const time = e.dates?.start?.localTime?.slice(0, 5) ?? "TBD";
+      const venue = e._embedded?.venues?.[0]?.name ?? "TBD";
+      return `${e.name} @ ${venue} at ${time}`;
+    });
+    if (events.length === 0) return "No ticketed events found in Boston today — use web_search to check for more.";
     return events.join("\n");
   } catch (err) {
-    return `Events fetch failed: ${err instanceof Error ? err.message : err}`;
+    return `Events fetch failed: ${err instanceof Error ? err.message : err} — use web_search to find Boston events tonight.`;
+  }
+}
+
+export async function fetchCityBuzz(): Promise<string> {
+  try {
+    const res = await fetch(
+      "https://www.reddit.com/r/boston/hot.json?limit=10",
+      {
+        headers: { "User-Agent": "BostonPulse/1.0" },
+        signal: AbortSignal.timeout(8000),
+      },
+    );
+    if (!res.ok) return `City buzz unavailable (Reddit ${res.status}).`;
+    const data = await res.json();
+    const posts = (data?.data?.children ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((c: any) => c.data)
+      .filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p: any) =>
+          !p.stickied &&
+          !p.pinned &&
+          p.score > 20 &&
+          p.title?.length > 10,
+      )
+      .slice(0, 5)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((p: any) => `• ${p.title} (${p.score} upvotes)`);
+    if (posts.length === 0) return "No trending Boston community posts right now.";
+    return posts.join("\n");
+  } catch (err) {
+    return `City buzz unavailable: ${err instanceof Error ? err.message : err}`;
   }
 }
 
 export async function fetchAllBostonData(): Promise<BostonLiveData> {
-  const [mbta, weather, events] = await Promise.all([
+  const [mbta, weather, events, buzz] = await Promise.all([
     fetchMBTAAlerts(),
     fetchBostonWeather(),
     fetchCityEvents(),
+    fetchCityBuzz(),
   ]);
-  return { mbta, weather, events };
+  return { mbta, weather, events, buzz };
 }

@@ -67,6 +67,7 @@ export function parseStreamContent(content: string): StreamState {
   };
 }
 
+
 /** Format tool parameters for display, stripping the "objective" key. */
 export function formatToolParams(raw: string): string {
   try {
@@ -121,15 +122,39 @@ function tryParseReasoningTree(
 
   if (steps.length === 0) return null;
 
-  // parsed.answer is the canonical answer field. Fall back to the last
-  // completed step's conclusion if the top-level answer is absent.
+  // 1. Top-level answer field (canonical)
   const topLevelAnswer = (parsed.answer as string | undefined) ?? "";
-  const answer =
-    topLevelAnswer ||
-    [...steps].reverse().find((s) => s.conclusion)?.conclusion ||
-    "";
+  if (topLevelAnswer) return { steps, answer: topLevelAnswer };
 
-  return { steps, answer };
+  // 2. Last step with a non-empty conclusion
+  const conclusionAnswer = [...steps].reverse().find((s) => s.conclusion)?.conclusion;
+  if (conclusionAnswer) return { steps, answer: conclusionAnswer };
+
+  // 3. Deep scan: walk every string value in the raw parsed object looking
+  //    for the formatted BostonPulse answer (starts with a known emoji header).
+  const ANSWER_MARKERS = ["🚇", "\u{1F687}", "🌤", "\u{1F324}", "Transit**", "\uD83D\uDE87"];
+  const found = findAnswerString(parsed, ANSWER_MARKERS);
+  return { steps, answer: found ?? "" };
+}
+
+/** Walk every string value in an object tree, return the first that contains any marker. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function findAnswerString(obj: any, markers: string[]): string | null {
+  if (typeof obj === "string") {
+    return markers.some((m) => obj.includes(m)) ? obj : null;
+  }
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const found = findAnswerString(item, markers);
+      if (found) return found;
+    }
+  } else if (obj && typeof obj === "object") {
+    for (const val of Object.values(obj)) {
+      const found = findAnswerString(val, markers);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 /** Recursively flatten the Subconscious reasoning tree into a flat step list. */

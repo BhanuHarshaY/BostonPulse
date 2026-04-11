@@ -82,7 +82,7 @@ export function ReasoningDisplay({
               const num = step.depth === 0 ? ++topIdx : 0;
               return (
                 <StepCard
-                  key={i}
+                  key={`${step.title}-${i}`}
                   step={step}
                   stepNumber={num}
                   isActive={
@@ -180,7 +180,7 @@ function StepCard({
         {step.toolUses.length > 0 && (
           <div className="space-y-2">
             {step.toolUses.map((tu, j) => (
-              <ToolCallCard key={j} tool={tu} />
+              <ToolCallCard key={`${tu.toolName}-${j}`} tool={tu} />
             ))}
           </div>
         )}

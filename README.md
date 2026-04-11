@@ -100,10 +100,10 @@ npm run dev:no-tunnel
 |----------|----------|----------------|
 | `SUBCONSCIOUS_API_KEY` | **Yes** | [subconscious.dev/platform](https://subconscious.dev/platform) |
 | `OPENWEATHERMAP_API_KEY` | **Yes** | [openweathermap.org/api](https://openweathermap.org/api) — free tier, key activates within 2 hours |
-| `SEATGEEK_CLIENT_ID` | **Yes** | [seatgeek.com/account/develop](https://seatgeek.com/account/develop) — free |
+| `TICKETMASTER_API_KEY` | **Yes** | [developer.ticketmaster.com](https://developer.ticketmaster.com/) — free, instant |
 | `SUBCONSCIOUS_ENGINE` | No | Default: `tim-gpt`. Options: `tim`, `tim-edge`, `tim-gpt-heavy` |
 
-Without `OPENWEATHERMAP_API_KEY` or `SEATGEEK_CLIENT_ID`, those sections will show as unavailable in the response. The MBTA feed is public and requires no key.
+Without `OPENWEATHERMAP_API_KEY` or `TICKETMASTER_API_KEY`, the agent will fall back to using `web_search` to find that data. The MBTA feed is public and requires no key.
 
 ## Engines
 

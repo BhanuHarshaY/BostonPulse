@@ -163,7 +163,7 @@ export function RunResult({ run }: RunResultProps) {
               <div className="flex flex-wrap gap-1.5">
                 {run.toolInvocations.map((inv, i) => (
                   <span
-                    key={i}
+                    key={`${inv.toolName}-${i}`}
                     className={[
                       "text-[11px] font-mono",
                       "text-(--teal)",
