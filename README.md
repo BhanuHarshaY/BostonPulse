@@ -1,18 +1,41 @@
 # BostonPulse
 
-Real-time Boston city intelligence powered by the [Subconscious](https://subconscious.dev) agent platform. Ask anything about Boston — transit, weather, events, what's happening tonight — and get a live, synthesized answer pulled from the MBTA API, OpenWeatherMap, SeatGeek, and real-time web/tweet search.
+Real-time Boston city intelligence powered by the [Subconscious](https://subconscious.dev) agent platform. Ask anything about Boston — transit, weather, events, what's happening tonight — and get a live, synthesized answer pulled from the MBTA API, OpenWeatherMap, Ticketmaster, Reddit, and real-time web/tweet search.
 
-![BostonPulse result — 🚇 Transit: Platform work at Jackson Square & stairway closures; Fields Corner, Market St, and several bus stops relocated. 🌤️ Weather: 60°F, clear, breezy. 🎉 Events Tonight: check venues and social feeds. 💡 Recommendation: Double-check your route.](docs/image.png)
+## Demo
+
+[![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/1tFCFxeNiFU)
+
+<!-- TODO: Replace YOUR_VIDEO_ID with the actual YouTube video ID -->
+
+## UI
+
+BostonPulse features a three-panel real-time interface built with Next.js 15 and React 19:
+
+| Panel | What it shows |
+|-------|--------------|
+| **Live Sidebar** (left) | Real-time MBTA transit alerts, current weather, today's events, and city buzz from Reddit — auto-refreshes every 2 minutes |
+| **Chat** (center) | Conversational interface with streaming AI responses rendered as markdown, conversation history, and quick-action suggestion cards |
+| **Reasoning Panel** (right) | Live visibility into the agent's thinking process — reasoning steps, tool invocations with parameters/results, and a tools summary timeline |
+
+**Design highlights:**
+- Dark glassmorphism theme with translucent surfaces and backdrop blur
+- Real-time streaming with typing indicators and animated reasoning timeline
+- Collapsible sidebars with smooth transitions — toggle from the header
+- Responsive layout that adapts to different screen sizes
+- MBTA line-colored transit alerts (Red, Orange, Green, Blue, Silver)
+- Skeleton loading states while data is being fetched
 
 ## What it does
 
-BostonPulse pre-fetches live data from three sources before the agent runs, then passes it as context in the prompt so the agent can synthesize a concise answer immediately:
+BostonPulse pre-fetches live data from four sources before the agent runs, then passes it as context in the prompt so the agent can synthesize a concise answer immediately:
 
 | Data source | What it provides |
 |-------------|-----------------|
 | **MBTA API v3** | Live transit alerts — delays, closures, service changes across subway, bus, and commuter rail |
 | **OpenWeatherMap** | Current Boston conditions — temperature, wind, humidity, rain |
-| **SeatGeek** | Tonight's events — games, concerts, shows, sorted by popularity |
+| **Ticketmaster** | Today's events — games, concerts, shows in the Boston area |
+| **Reddit r/boston** | City buzz — trending community posts, local discussions |
 
 The agent also has access to Subconscious platform tools (`tweet_search`, `fresh_search`, `web_search`, `news_search`) to pull in real-time social chatter and breaking local news.
 
@@ -28,7 +51,7 @@ User query
     ▼
 /api/agent/stream
     │
-    ├── fetchAllBostonData()        ← runs in parallel: MBTA + Weather + Events
+    ├── fetchAllBostonData()        ← runs in parallel: MBTA + Weather + Events + Buzz
     │       │
     │       └── injected into instructions as a pre-fetched context block
     │
@@ -46,26 +69,39 @@ app/
 ├── api/
 │   ├── agent/
 │   │   ├── route.ts            # Sync agent endpoint
-│   │   └── stream/route.ts     # Streaming SSE endpoint (used by the UI)
+│   │   └── stream/route.ts     # Streaming SSE endpoint (primary)
+│   ├── live-data/
+│   │   └── route.ts            # Public endpoint for sidebar live data
 │   └── tools/
-│       └── route.ts            # Self-hosted tool dispatcher (Calculator, WebReader)
-├── layout.tsx
-├── page.tsx
-└── globals.css
+│       └── route.ts            # Self-hosted tool dispatcher
+├── layout.tsx                  # Root layout with fonts and metadata
+├── page.tsx                    # Entry point — renders Layout
+└── globals.css                 # Global styles, animations, theme imports
+
+ui/                             # Primary UI components
+├── Layout.tsx                  # Three-column layout with collapsible panels
+├── Header.tsx                  # Top nav with sidebar toggles and live indicator
+├── ChatView.tsx                # Message history + SSE streaming integration
+├── ChatInput.tsx               # User input with suggestion chips
+├── ChatMessage.tsx             # Individual message with markdown rendering
+├── WelcomeScreen.tsx           # Initial state with quick-action cards
+├── LiveSidebar.tsx             # Left panel — MBTA, weather, events, buzz
+├── ReasoningPanel.tsx          # Right panel — reasoning steps and tool timeline
+└── theme.css                   # Design tokens and CSS variables
 
 lib/
-├── boston-data.ts              # fetchMBTAAlerts, fetchBostonWeather, fetchCityEvents
+├── boston-data.ts               # Live data fetchers (MBTA, weather, events, buzz)
 ├── subconscious.ts             # SDK singleton
 ├── tools.ts                    # Platform tool config (web_search, tweet_search, etc.)
 ├── types.ts                    # System prompt, buildInstructions(), shared types
 └── stream-parser.ts            # Incremental JSON stream parser for SSE deltas
 
-components/
-├── AgentRunner.tsx             # Task input + SSE streaming orchestrator
-├── RunResult.tsx               # Completed run display (collapsible, markdown-rendered)
-├── ReasoningDisplay.tsx        # Live reasoning step timeline
-├── ToolPanel.tsx               # Live tool activity sidebar
-└── StreamingText.tsx           # Streaming answer with react-markdown
+components/                     # Legacy components (kept for reference)
+├── AgentRunner.tsx
+├── RunResult.tsx
+├── ReasoningDisplay.tsx
+├── ToolPanel.tsx
+└── StreamingText.tsx
 
 scripts/
 └── dev-tunnel.mjs              # Auto-reconnecting localtunnel for local development
@@ -132,4 +168,4 @@ No tool registration needed — data is injected as context, not fetched by the 
 - [Subconscious Node.js SDK](https://github.com/subconscious-systems/subconscious-node)
 - [MBTA API v3](https://api-v3.mbta.com/docs/swagger/index.html)
 - [OpenWeatherMap Current Weather API](https://openweathermap.org/current)
-- [SeatGeek API](https://platform.seatgeek.com)
+- [Ticketmaster Discovery API](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/)
