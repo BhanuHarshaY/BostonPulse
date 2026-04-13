@@ -82,31 +82,22 @@ export async function fetchCityEvents(): Promise<string> {
 
 export async function fetchCityBuzz(): Promise<string> {
   try {
+    // Boston 311 open data — recent citizen-reported cases (no auth required)
     const res = await fetch(
-      "https://www.reddit.com/r/boston/hot.json?limit=10",
-      {
-        headers: { "User-Agent": "BostonPulse/1.0" },
-        signal: AbortSignal.timeout(8000),
-      },
+      "https://data.boston.gov/api/3/action/datastore_search?resource_id=2968e2c0-d479-49ba-a884-4ef523ada3c0&limit=10&sort=open_dt desc",
+      { signal: AbortSignal.timeout(8000) },
     );
-    if (!res.ok) return `City buzz unavailable (Reddit ${res.status}).`;
+    if (!res.ok) return `City buzz unavailable (Boston 311 ${res.status}).`;
     const data = await res.json();
-    const posts = (data?.data?.children ?? [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((c: any) => c.data)
-      .filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (p: any) =>
-          !p.stickied &&
-          !p.pinned &&
-          p.score > 20 &&
-          p.title?.length > 10,
-      )
-      .slice(0, 5)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((p: any) => `• ${p.title} (${p.score} upvotes)`);
-    if (posts.length === 0) return "No trending Boston community posts right now.";
-    return posts.join("\n");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const records: any[] = data?.result?.records ?? [];
+    if (records.length === 0) return "No recent Boston 311 activity found.";
+    const items = records
+      .filter((r: any) => r.type && r.neighborhood)
+      .slice(0, 6)
+      .map((r: any) => `• ${r.type} in ${r.neighborhood}${r.open_dt ? " (reported " + r.open_dt.slice(0, 10) + ")" : ""}`);
+    if (items.length === 0) return "No recent Boston 311 activity found.";
+    return "Recent Boston 311 reports:\n" + items.join("\n");
   } catch (err) {
     return `City buzz unavailable: ${err instanceof Error ? err.message : err}`;
   }
