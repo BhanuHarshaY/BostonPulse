@@ -6,8 +6,6 @@ Real-time Boston city intelligence powered by the [Subconscious](https://subcons
 
 [![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/1tFCFxeNiFU)
 
-<!-- TODO: Replace YOUR_VIDEO_ID with the actual YouTube video ID -->
-
 ## UI
 
 BostonPulse features a three-panel real-time interface built with Next.js 15 and React 19:
