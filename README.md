@@ -4,7 +4,7 @@ Real-time Boston city intelligence powered by the [Subconscious](https://subcons
 
 ## Demo
 
-[![Watch the demo](https://img.youtube.com/vi/Z5y2SbixYeo/maxresdefault.jpg)](https://youtu.be/1tFCFxeNiFU)
+[![Watch the video](https://img.youtube.com/vi/Z5y2SbixYeo/maxresdefault.jpg)](https://youtu.be/Z5y2SbixYeo)
 
 ## UI
 
