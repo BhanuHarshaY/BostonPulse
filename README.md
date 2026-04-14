@@ -1,10 +1,16 @@
 # BostonPulse
 
-Real-time Boston city intelligence powered by the [Subconscious](https://subconscious.dev) agent platform. Ask anything about Boston — transit, weather, events, what's happening tonight — and get a live, synthesized answer pulled from the MBTA API, OpenWeatherMap, Ticketmaster, Reddit, and real-time web/tweet search.
+Real-time Boston city intelligence powered by the [Subconscious](https://subconscious.dev) agent platform. Ask anything about Boston: transit, weather, events, what's happening tonight,  and get a live, synthesized answer pulled from the MBTA API, OpenWeatherMap, Ticketmaster, Reddit, and real-time web/tweet search.
 
 ## Demo
 
+__Click the thumbnail below to watch the demo:__
+
 [![Watch the demo](https://img.youtube.com/vi/1tFCFxeNiFU/maxresdefault.jpg)](https://youtu.be/1tFCFxeNiFU)
+
+## Live App
+
+__Try it now at__ [boston-pulse-finder.vercel.app](https://boston-pulse-finder.vercel.app)
 
 
 ## UI
